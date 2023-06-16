@@ -46,8 +46,6 @@ public class ServiceApiController implements ServiceApi {
     )
     @Override
     public ResponseEntity<ServiceDefinitionResponse> serviceDefinitionV1CreatePost(ServiceDefinitionRequest serviceDefinitionRequest) {
-        //validate missing json format
-        //validate based on token in request info and everything else
         ServiceDefinitionResponse response = serviceApiService.createServiceDefinition(serviceDefinitionRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -93,11 +91,8 @@ public class ServiceApiController implements ServiceApi {
     )
     @Override
     public ResponseEntity<ServiceResponse> serviceV1CreatePost(ServiceRequest serviceRequest) {
-        //validate missing json format
-        //validate based on token in request info and everything else
         ServiceResponse response = serviceApiService.createService(serviceRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
-//        return ServiceApi.super.serviceV1CreatePost(serviceRequest);
     }
 
     /**

@@ -110,7 +110,7 @@ public class ServiceApiService implements ServiceApiDelegate {
         ResponseInfo responseInfo = new ResponseInfo();
         responseInfo.setApiId(requestInfo.getApiId());
         responseInfo.setVer(requestInfo.getVer());
-//        responseInfo.setTs(requestInfo.getTs()); //if its a timestamp then should it be different from the request timestamp?
+        responseInfo.setTs(requestInfo.getTs());
         responseInfo.setMsgId(requestInfo.getMsgId());
         return responseInfo;
     }

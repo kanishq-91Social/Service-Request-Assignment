@@ -81,7 +81,6 @@ public class ServiceDAO {
                 }));
             }
 
-//            if(!result)
             return service;
         } catch (Exception exception) {
             throw new RuntimeException(exception);

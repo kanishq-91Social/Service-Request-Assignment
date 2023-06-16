@@ -75,7 +75,7 @@ public class ServiceDefinitionDAO {
                     }
                 }));
             }
-            String serviceDefinitionInsertSql = "INSERT INTO service_definition (id, tenant_id, code, is_active, audit_details_id, client_id additional_details) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            String serviceDefinitionInsertSql = "INSERT INTO service_definition (id, tenant_id, code, is_active, audit_details_id, client_id, additional_details) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PGobject finalJsonObj1 = jsonObj;
             boolean result = Boolean.TRUE.equals(jdbcTemplate.execute(serviceDefinitionInsertSql, new PreparedStatementCallback<Boolean>() {
                 @Override
