@@ -2,6 +2,9 @@ package com.example.servicerequest.dao;
 
 import com.example.servicerequest.model.generated.*;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.postgresql.util.PGobject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -13,15 +16,14 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.sql.ResultSet;
 @Repository
 public class ServiceDefinitionDAO {
     private JdbcTemplate jdbcTemplate;
@@ -33,6 +35,7 @@ public class ServiceDefinitionDAO {
     @Transactional
     public ServiceDefinition insert(ServiceDefinition serviceDefinition) {
         try {
+            if(serviceDefinition.getId() == null) serviceDefinition.setId(UUID.randomUUID().toString());
             Object additionalDetails = serviceDefinition.getAdditionalDetails();
             JsonNode additionalDetailsNode;
             PGobject jsonObj = null;
@@ -53,6 +56,7 @@ public class ServiceDefinitionDAO {
                     public Boolean doInPreparedStatement(PreparedStatement ps) throws SQLException, DataAccessException {
                         int i = 0;
                         for(AttributeDefinition attributeDefinition : attributeDefinitionList) {
+                            if(attributeDefinition.getId() == null) attributeDefinition.setId(UUID.randomUUID().toString());
                             ps.setString(1, attributeDefinition.getId());
                             ps.setString(2, attributeDefinition.getTenantId());
                             ps.setString(3, attributeDefinition.getCode());
@@ -71,7 +75,7 @@ public class ServiceDefinitionDAO {
                     }
                 }));
             }
-            String serviceDefinitionInsertSql = "INSERT INTO service_definition (id, tenant_id, code, is_active, audit_details_id, additional_details) VALUES (?, ?, ?, ?, ?, ?)";
+            String serviceDefinitionInsertSql = "INSERT INTO service_definition (id, tenant_id, code, is_active, audit_details_id, client_id additional_details) VALUES (?, ?, ?, ?, ?, ?, ?)";
             PGobject finalJsonObj1 = jsonObj;
             boolean result = Boolean.TRUE.equals(jdbcTemplate.execute(serviceDefinitionInsertSql, new PreparedStatementCallback<Boolean>() {
                 @Override
@@ -81,7 +85,8 @@ public class ServiceDefinitionDAO {
                     ps.setString(3, serviceDefinition.getCode());
                     ps.setBoolean(4, serviceDefinition.getIsActive());
                     ps.setInt(5, auditId);
-                    ps.setObject(6, finalJsonObj1);
+                    ps.setString(6, serviceDefinition.getClientId());
+                    ps.setObject(7, finalJsonObj1);
                     return ps.execute();
                 }
             }));
@@ -143,8 +148,9 @@ public class ServiceDefinitionDAO {
         }
         String query = queryBuider.toString();
         query = query.substring(0, query.length() - 4);
-        // Using Pagination
-        query += " LIMIT "+ pagination.getLimit() +" OFFSET "+pagination.getOffSet();
+        if(pagination != null && !(BigDecimal.ZERO.equals(pagination.getLimit()) || BigDecimal.ZERO.equals(pagination.getOffSet())) ) {
+            query += " LIMIT "+ pagination.getLimit().longValue() +" OFFSET "+pagination.getOffSet().longValue();
+        }
         Map<String, ServiceDefinition> serviceDefinitionMap = new HashMap<>();
         jdbcTemplate.query(query,rs -> {
             String serviceDefinitionId = rs.getString("service_definition_id");
@@ -157,7 +163,11 @@ public class ServiceDefinitionDAO {
                 sd.setCode(rs.getString("code"));
                 sd.setClientId(rs.getString("service_definition_client_id"));
                 sd.setIsActive(rs.getBoolean("service_definition_is_active"));
-                sd.setAdditionalDetails(rs.getObject("service_definition_additional_details"));
+                try {
+                    sd.setAdditionalDetails((JSONObject)(new JSONParser().parse(rs.getString("service_definition_additional_details"))));
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
                 serviceDefinitionMap.put(serviceDefinitionId, sd);
             }
             if(auditDetailsId == 0) {

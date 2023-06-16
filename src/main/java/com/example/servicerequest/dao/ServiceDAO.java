@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
@@ -124,7 +125,9 @@ public class ServiceDAO {
         String query = queryBuider.toString();
         query = query.substring(0, query.length() - 4);
         // Using Pagination
-        query += " LIMIT "+ pagination.getLimit() +" OFFSET "+pagination.getOffSet();
+        if(pagination != null && !(BigDecimal.ZERO.equals(pagination.getLimit()) || BigDecimal.ZERO.equals(pagination.getOffSet())) ) {
+            query += " LIMIT "+ pagination.getLimit().longValue() +" OFFSET "+pagination.getOffSet().longValue();
+        }
         Map<String, Service> serviceMap = new HashMap<>();
         jdbcTemplate.query(query,rs -> {
             String serviceId = rs.getString("service_id");
@@ -139,7 +142,7 @@ public class ServiceDAO {
                 service.setClientId(rs.getString("client_id"));
                 service.setServiceDefId(rs.getString("service_definition_id"));
                 service.setReferenceId(rs.getString("reference_id"));
-                service.setAdditionalDetails(rs.getObject("service_definition_additional_details"));
+                service.setAdditionalDetails(rs.getObject("service_value_additional_details"));
                 serviceMap.put(serviceId, service);
             }
             if(auditDetailsId == 0) {

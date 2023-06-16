@@ -15,7 +15,7 @@ code VARCHAR(255),
 is_active BOOLEAN,
 audit_details_id INT,
 additional_details JSON,
-client_id varchar(255),
+client_id varchar(255) NOT NULL,
 CONSTRAINT fk_audit_details
       FOREIGN KEY(audit_details_id)
 	  REFERENCES audit_details(id)
